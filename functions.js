@@ -16,9 +16,12 @@ connection.connect();
 
 //Function to add new product into the table
 var addProduct = function addProduct(productName,productDepartment,productPrice,productQty){
-    var query = `INSERT INTO products(product_name, department_name, price, stock_quantity) VALUES(' ${productName} ' , ' ${productDepartment}' , ${productPrice} , ${productQty})`;
+    var query = `INSERT INTO products(product_name, department_name, price, stock_quantity, product_sales) VALUES('${productName}' , '${productDepartment}' , ${productPrice} , ${productQty}, 0)`;
     connection.query(query, function(error, results){
     if(error) throw error;
+    console.log("new product has been added");
+
+
 });
 }
 
@@ -31,6 +34,7 @@ var getItemById = function getItemById(productId, addationalQty){
         var newQty = currentQty + addationalQty;
         connection.query(`UPDATE products SET stock_quantity=${newQty} WHERE id=${productId}`, function(error, results){
             if(error) throw error;
+            console.log(`Item Id : ${productId} => ${addationalQty} have been added`)
         });
     });
 }
@@ -155,6 +159,7 @@ var toatalSalesByDept = function toatalSalesByDept(department, total){
         var query = `SELECT * FROM departments WHERE department_name='${department}';`
         connection.query(query, function(error,results,fields){
             if(error) throw error;
+            // console.log(results);
             var total_product_sales = results[0].total_product_sales;
             total_product_sales = parseFloat(total_product_sales + total);
         connection.query(`UPDATE departments SET total_product_sales=${total_product_sales} WHERE department_name='${department}';`,
@@ -177,7 +182,7 @@ var getDepartmentInfo = function getDepartmentInfo(){
             });
        
         for(i=0; i<results.length; i++){
-            var total_profit = results[i].over_head_costs - results[i].over_head_costs ;
+            var total_profit = parseFloat(results[i].total_product_sales - results[i].over_head_costs);
             table.push(
                 [results[i].department_id, results[i].department_name, results[i].over_head_costs, results[i].total_product_sales, total_profit]
             );
@@ -210,12 +215,12 @@ var displayAllItems = function displayAllItems(){
     connection.query(query, function(error, results,fields){
         if(error) throw error;
         var table = new Table({
-            head : ["Product Id", "Product Name", "Price"],
-            colWidths : [20, 40, 20]
+            head : ["Product Id", "Product Name", "Price", "Stock_qty"],
+            colWidths : [20, 40, 20,20]
         });
         for(var i=0; i<results.length; i++){
             table.push(
-                [results[i].id, results[i].product_name, results[i].price]
+                [results[i].id, results[i].product_name, results[i].price, results[i].stock_quantity]
             );
         }
         console.log("\n" + table.toString());
